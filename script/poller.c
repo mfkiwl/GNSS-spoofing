@@ -1,14 +1,28 @@
+//--------------------------------------------------------------------
+// File information
+
+// Name          : poller
+// Purpose       : Sample design for GNSS-SDR-SIM Polling Utility
+// License       : BSD3 
+// Revision      : 0.1.220301
+// Author        : smk (sudhanshumohan781@gmail.com)
+
+//--------------------------------------------------------------------
+// Libraries
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <errno.h>
 #include <sys/types.h>
-#include <sys/inotify.h> // feature in linux kernel
-// similar exists in freeBSD/MacOS - kqueue - kernel queue
+#include <sys/inotify.h> 
 #include <unistd.h>
 #include <string.h>
 
 #define EVENT_SIZE  ( sizeof (struct inotify_event))
 #define BUF_LEN     ( 1024 * ( EVENT_SIZE + 16))
+
+//--------------------------------------------------------------------
+// Main Funtion
 
 int main( int argc, char **argv ) {
   int fd;
@@ -52,12 +66,7 @@ int main( int argc, char **argv ) {
               // This should trigger xml -> rinex convertor
               printf("Calling xml to rinex convertor==============>\n");
               // -- we fork a process --> 
-              // -simc ( xml )
-              // --->> how do you manage the changing ephemerous
-              // changes
-              
-              // 1 hour... - > 
-              sleep(1000)
+              // -simc ( xml, location,frequency sample )
               // ----> watcher runn... 
             }
             printf("The file %s was modified.\n",event->name);
@@ -76,5 +85,7 @@ int main( int argc, char **argv ) {
 
   exit ( 0 );
 
-
 }
+
+//--------------------------------------------------------------------
+// EOF
