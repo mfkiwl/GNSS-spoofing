@@ -306,7 +306,6 @@ void llh2xyz(const double *llh, double *xyz)
 	xyz[0] = tmp*clon;
 	xyz[1] = tmp*slon;
 	xyz[2] = ((1.0-e2)*n + llh[2])*slat;
-	printf("%lf , %lf ,%lf \n",xyz[0],xyz[1],xyz[2]);
 
 	return;
 }
@@ -811,22 +810,26 @@ gpstime_t incGpsTime(gpstime_t g0, double dt)
 	return(g1);
 }
 
-/*Read generated XML File */
+// read xml file // (testing)
+
 int readXMLAll(ephem_t eph[][MAX_SAT], ionoutc_t *ionoutc , const char *fname)
 {
 	FILE *fp;
-	int ieph;
     char str[150];
+    int ieph=0;
     int sv;
     datetime_t t;
 	gpstime_t g;
 	gpstime_t g0;
-    // int flags = 0x0;
+    int flags = 0x0;
 	double dt;
 
 
-    if (NULL==(fp=fopen(fname, "rt")))              
+    if (NULL==(fp=fopen("gps_ephemeris.xml", "rt")))              
         printf("-1");
+	else
+		printf("file opened \n");
+
     for (ieph=0; ieph<EPHEM_ARRAY_SIZE; ieph++)
 		for (sv=0; sv<MAX_SAT; sv++)
 			eph[ieph][sv].vflg = 0;
@@ -864,7 +867,6 @@ int readXMLAll(ephem_t eph[][MAX_SAT], ionoutc_t *ionoutc , const char *fname)
 	// ionoutc->vflg = FALSE;
 	// if (flags==0xF) // Read all Iono/UTC lines
 		// ionoutc->vflg = TRUE;
-
     //read emphimeris block
 
     g0.week = -1;
@@ -934,146 +936,144 @@ int readXMLAll(ephem_t eph[][MAX_SAT], ionoutc_t *ionoutc , const char *fname)
             }
             else if(strcmp(tag,"M_0")==0)
             {
-                prntvar=1;
+                // prntvar=1;
                 eph[ieph][sv].m0 = atof(innertag);
             }
             else if(strcmp(tag,"delta_n")==0)
             {
-                prntvar=1;
+                // prntvar=1;
                 eph[ieph][sv].deltan = atof(innertag);
             }
             else if(strcmp(tag,"ecc")==0)
             {
-                prntvar=1;
+                // prntvar=1;
                 eph[ieph][sv].ecc = atof(innertag);
                 eph[ieph][sv].sq1e2 = sqrt(1.0 - eph[ieph][sv].ecc*eph[ieph][sv].ecc);
             }
             else if(strcmp(tag,"sqrtA")==0)
             {
-                prntvar=1;
+                // prntvar=1;
                 eph[ieph][sv].sqrta = atof(innertag);
                 eph[ieph][sv].A = eph[ieph][sv].sqrta * eph[ieph][sv].sqrta;
                 eph[ieph][sv].n = sqrt(GM_EARTH/(eph[ieph][sv].A*eph[ieph][sv].A*eph[ieph][sv].A)) + eph[ieph][sv].deltan;
             }
             else if(strcmp(tag,"OMEGA_0")==0)
             {
-                prntvar=1;
+                // prntvar=1;
                 eph[ieph][sv].omg0 = atof(innertag);  
             }
             else if(strcmp(tag,"i_0")==0)
             {
-                prntvar=1;
+                // prntvar=1;
                 eph[ieph][sv].inc0 = atof(innertag);                
             }
             else if(strcmp(tag,"omega")==0)
             {
-                prntvar=1;
+                // prntvar=1;
                 eph[ieph][sv].aop = atof(innertag); 
             }
             else if(strcmp(tag,"OMEGAdot")==0)
             {
-                prntvar=1;
+                // prntvar=1;
                 eph[ieph][sv].omgdot = atof(innertag);
 				eph[ieph][sv].omgkdot = eph[ieph][sv].omgdot - OMEGA_EARTH; 
             }
             else if(strcmp(tag,"idot")==0)
             {
-                prntvar=1;
+                // prntvar=1;
                 eph[ieph][sv].idot = atof(innertag);
             }
             else if(strcmp(tag,"Cuc")==0)
             {
-                prntvar=1;
+                // prntvar=1;
                 eph[ieph][sv].cuc = atof(innertag);
             }
             else if(strcmp(tag,"Cus")==0)
             {
-                prntvar=1;
+                // prntvar=1;
                 eph[ieph][sv].cus = atof(innertag);
             }
             else if(strcmp(tag,"Crc")==0)
             {
-                prntvar=1;
+                // prntvar=1;
                 eph[ieph][sv].crc = atof(innertag);
             }
             else if(strcmp(tag,"Crs")==0)
             {
-                prntvar=1;
+                // prntvar=1;
                 eph[ieph][sv].crs = atof(innertag);
             }
             else if(strcmp(tag,"Cic")==0)
             {
-                prntvar=1;
+                // prntvar=1;
                 eph[ieph][sv].cic = atof(innertag);
             }
             else if(strcmp(tag,"Cis")==0)
             {
-                prntvar=1;
+                // prntvar=1;
                 eph[ieph][sv].cis = atof(innertag);
             }
             else if(strcmp(tag,"af0")==0)
             {
-                prntvar=1;
+                // prntvar=1;
                 eph[ieph][sv].af0 = atof(innertag);
             }
             else if(strcmp(tag,"af1")==0)
             {
-                prntvar=1;
+                // prntvar=1;
                 eph[ieph][sv].af1 = atof(innertag);
             }
             else if(strcmp(tag,"af2")==0)
             {
-                prntvar=1;
+                // prntvar=1;
                 eph[ieph][sv].af2 = atof(innertag);
             }
             else if(strcmp(tag,"IODE_SF2")==0 || strcmp(tag,"IODE_SF3")==0)
             {
-                prntvar=1;
+                // prntvar=1;
                 eph[ieph][sv].iode = (int)atof(innertag);             
             }
             else if(strcmp(tag,"code_on_L2")==0)
             {
-                prntvar=1;
+                // prntvar=1;
                 eph[ieph][sv].codeL2 = (int)atof(innertag);
             }
             else if(strcmp(tag,"SV_health")==0)
             {
-                prntvar=1;
+                // prntvar=1;
                 eph[ieph][sv].svhlth = (int)atof(innertag);
                 if ((eph[ieph][sv].svhlth>0) && (eph[ieph][sv].svhlth<32))
 			        eph[ieph][sv].svhlth += 32;
             }
             else if(strcmp(tag,"TGD")==0)
             {
-                prntvar=1;
+                // prntvar=1;
                 eph[ieph][sv].tgd = atof(innertag);
             }
             else if(strcmp(tag,"IODC")==0)
             {
-                prntvar=1;
+                // prntvar=1;
                 eph[ieph][sv].iodc = (int)atof(innertag);
             }
 			else if(strcmp(tag,"toe")==0)
             {
-                prntvar=1;
+                // prntvar=1;
                 eph[ieph][sv].toe.sec = (int)atof(innertag);
 				eph[ieph][sv].toe.week = 1734;
             }
             // if(prntvar==1)
             // {
-            //     printf("%s , %d , %d\n",tag,ieph,sv);
+            //     printf("%s : %0.30f\n",tag,atof(innertag));
             // }
-			eph[ieph][sv].vflg = 1;
         }
     }
-	// eph[ieph][sv].vflg = 1;
+	eph[ieph][sv].vflg = 1;
     fclose(fp);
     if (g0.week>=0)
 		ieph += 1;
 
     return(ieph);
-} 
-
+}
 
 
 
@@ -1085,6 +1085,7 @@ int readXMLAll(ephem_t eph[][MAX_SAT], ionoutc_t *ionoutc , const char *fname)
  *  \param[in] fname File name of the RINEX file
  *  \returns Number of sets of ephemerides in the file
  */
+
 int readRinexNavAll(ephem_t eph[][MAX_SAT], ionoutc_t *ionoutc, const char *fname)
 {
 	FILE *fp;
@@ -1825,11 +1826,6 @@ int checkSatVisibility(ephem_t eph, gpstime_t g, double *xyz, double elvMask, do
 	if (eph.vflg != 1)
 		return (-1); // Invalid
 
-	// for(int i=0;i<3;i++)
-	// {
-	// 	printf("%lf\n", xyz[i] );
-	// }
-	printf("\n");
 	xyz2llh(xyz,llh);
 	ltcmat(llh, tmat);
 
@@ -1837,22 +1833,11 @@ int checkSatVisibility(ephem_t eph, gpstime_t g, double *xyz, double elvMask, do
 	subVect(los, pos, xyz);
 	ecef2neu(los, tmat, neu);
 	neu2azel(azel, neu);
-	int c;
-	printf("%lf %lf \n", azel[1]*R2D , elvMask);
-	if (abs(azel[1]*R2D) > elvMask)
-	{
-		// printf("visible");
-		c=1;
-	}
-	else
-	{
-		printf("not visible");
-		c=0;
-	}
 
-		// return (1); // Visible
+	if (azel[1]*R2D > elvMask)
+		return (1); // Visible
 	// else
-	return (c); // Invisible
+	return (0); // Invisible
 }
 
 int allocateChannel(channel_t *chan, ephem_t *eph, ionoutc_t ionoutc, gpstime_t grx, double *xyz, double elvMask)
@@ -1871,7 +1856,7 @@ int allocateChannel(channel_t *chan, ephem_t *eph, ionoutc_t ionoutc, gpstime_t 
 		if(checkSatVisibility(eph[sv], grx, xyz, 0.0, azel)==1)
 		{
 			nsat++; // Number of visible satellites
-			printf("visible %d\n",sv+1);
+
 			if (allocatedSat[sv]==-1) // Visible but not allocated
 			{
 				// Allocated new satellite
@@ -2041,7 +2026,6 @@ int main(int argc, char *argv[])
 
 	while ((result=getopt(argc,argv,"e:u:g:c:l:o:s:b:T:t:d:iv"))!=-1)
 	{
-		// printf("%d\n",result);
 		switch (result)
 		{
 		case 'e':
@@ -2063,10 +2047,8 @@ int main(int argc, char *argv[])
 		case 'l':
 			// Static geodetic coordinates input mode
 			// Added by scateu@gmail.com
-			// printf("working");
 			staticLocationMode = TRUE;
 			sscanf(optarg,"%lf,%lf,%lf",&llh[0],&llh[1],&llh[2]);
-			// printf("\n%lf , %lf , %lf\n",llh[0],llh[1],llh[2]);
 			llh[0] = llh[0] / R2D; // convert to RAD
 			llh[1] = llh[1] / R2D; // convert to RAD
 			llh2xyz(llh,xyz[0]); // Convert llh to xyz
@@ -2213,7 +2195,10 @@ int main(int argc, char *argv[])
 	////////////////////////////////////////////////////////////
 
 	// neph = readRinexNavAll(eph, &ionoutc, navfile);
+	printf("okbefore\n");
 	neph = readXMLAll(eph,&ionoutc,navfile);
+	printf("okafter\n");
+
 
 	if (neph==0)
 	{
@@ -2330,7 +2315,6 @@ int main(int argc, char *argv[])
 
 	// Select the current set of ephemerides
 	ieph = -1;
-
 	for (i=0; i<neph; i++)
 	{
 		for (sv=0; sv<MAX_SAT; sv++)
@@ -2416,19 +2400,10 @@ int main(int argc, char *argv[])
 	grx = incGpsTime(g0, 0.0);
 
 	// Allocate visible satellites
-	// for(int i=0;i<13;i++)
-	// {
-	// 	for(int j=0;j<32;j++)
-	// 	{
-	// 		printf("%d ",eph[i][j].crc);
-	// 	}
-	// 	printf("\n");
-	// }
 	allocateChannel(chan, eph[ieph], ionoutc, grx, xyz[0], elvmask);
 
 	for(i=0; i<MAX_CHAN; i++)
 	{
-		// printf("check\n %d",chan[i].prn);
 		if (chan[i].prn>0)
 			fprintf(stderr, "%02d %6.1f %5.1f %11.1f %5.1f\n", chan[i].prn, 
 				chan[i].azel[0]*R2D, chan[i].azel[1]*R2D, chan[i].rho0.d, chan[i].rho0.iono_delay);
