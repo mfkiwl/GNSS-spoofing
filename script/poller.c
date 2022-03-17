@@ -15,6 +15,7 @@
 #include <errno.h>
 #include <sys/types.h>
 #include <sys/inotify.h> 
+#include <sys/wait.h>
 #include <unistd.h>
 #include <string.h>
 
@@ -41,6 +42,7 @@ int main( int argc, char **argv ) {
   printf("Starting up Watcher\n");
   int cnt = 0, maxCnt = 100;
   printf("Event will be watched for %d updates\n",maxCnt);
+  pid_t tmp;
 
 
   // always true
@@ -64,10 +66,22 @@ int main( int argc, char **argv ) {
 
             if(strcmp(event->name,"gps_ephemeris.xml") == 0) {
               // This should trigger xml -> rinex convertor
+              kill(pid, SIGKILL);
               printf("Calling xml to rinex convertor==============>\n");
               // -- we fork a process --> 
+              pid_t pid=fork();
+              tmp = pid;
+              if(pid == 0) {
               // -simc ( xml, location,frequency sample )
+                  static char *argv[]={"echo","testing gnss"}
+                  execv("/bin/bash",argv);
+                  exit(127)
               // ----> watcher runn... 
+              } else {
+                  // sleep for some time
+                  sleep(100);
+              }
+              
             }
             printf("The file %s was modified.\n",event->name);
           }
