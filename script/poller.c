@@ -37,12 +37,12 @@ int main( int argc, char **argv ) {
     perror( "inotify_init" );
   }
 
-  wd = inotify_add_watch( fd, "/home/smk/tmp/", IN_MODIFY | IN_CREATE | IN_DELETE);
+  wd = inotify_add_watch( fd, "/home/gnss-pc1/tmp/", IN_MODIFY | IN_CREATE | IN_DELETE);
 
   printf("Starting up Watcher\n");
   int cnt = 0, maxCnt = 100;
   printf("Event will be watched for %d updates\n",maxCnt);
-  pid_t tmp;
+  pid_t tmp = 0;
 
 
   // always true
@@ -66,16 +66,17 @@ int main( int argc, char **argv ) {
 
             if(strcmp(event->name,"gps_ephemeris.xml") == 0) {
               // This should trigger xml -> rinex convertor
-              kill(pid, SIGKILL);
+              if (tmp)
+                kill(tmp, SIGKILL);
               printf("Calling xml to rinex convertor==============>\n");
               // -- we fork a process --> 
               pid_t pid=fork();
               tmp = pid;
               if(pid == 0) {
               // -simc ( xml, location,frequency sample )
-                  static char *argv[]={"echo","testing gnss"}
+                  static char *argv[]={"echo","testing gnss"};
                   execv("/bin/bash",argv);
-                  exit(127)
+                  exit(127);
               // ----> watcher runn... 
               } else {
                   // sleep for some time
