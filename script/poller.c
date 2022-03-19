@@ -1,14 +1,14 @@
-//--------------------------------------------------------------------
-// File information
-
-// Name          : poller
-// Purpose       : Sample design for GNSS-SDR-SIM Polling Utility
-// License       : BSD3 
-// Revision      : 0.1.220301
-// Author        : smk (sudhanshumohan781@gmail.com)
-
-//--------------------------------------------------------------------
-// Libraries
+/*
+* --------------------------------------------------------------------
+* @file    poller
+* @brief   Sample design for GNSS-SDR-SIM Polling Utility
+* @author  smk (smk@it.ca)
+* @version 0.1.20220319
+* @license BSD3
+* @bugs    No know bugs
+* --------------------------------------------------------------------
+*/
+/* Libraries */
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -22,14 +22,13 @@
 #define EVENT_SIZE  ( sizeof (struct inotify_event))
 #define BUF_LEN     ( 1024 * ( EVENT_SIZE + 16))
 
-//--------------------------------------------------------------------
-// Main Funtion
+/* Main Funtion */
 
 int main( int argc, char **argv ) {
   int fd;
   int wd;
   char buffer[BUF_LEN];
-  printf("Starting up Program\n");
+  printf("Starting up Program...\n");
 
   fd = inotify_init();
 
@@ -37,13 +36,12 @@ int main( int argc, char **argv ) {
     perror( "inotify_init" );
   }
 
+  printf("Starting up Watcher...\n");
   wd = inotify_add_watch( fd, "/home/gnss-pc1/tmp/", IN_MODIFY | IN_CREATE | IN_DELETE);
 
-  printf("Starting up Watcher\n");
   int cnt = 0, maxCnt = 100;
-  printf("Event will be watched for %d updates\n",maxCnt);
+  printf("Event will be watched for %d updates.\n",maxCnt);
   pid_t tmp = 0;
-
 
   // always true
   while(1) {
@@ -68,19 +66,22 @@ int main( int argc, char **argv ) {
               // This should trigger xml -> rinex convertor
               if (tmp)
                 kill(tmp, SIGKILL);
-              printf("Calling xml to rinex convertor==============>\n");
+              printf("Calling xml to rinex convertor...\n");
               // -- we fork a process --> 
               pid_t pid=fork();
               tmp = pid;
               if(pid == 0) {
               // -simc ( xml, location,frequency sample )
-                  static char *argv[]={"echo","testing gnss"};
-                  execv("/bin/bash",argv);
+                  static char *argv[]={"echo","Testing echo for gps-sdr-sim.",NULL};
+                  execv("/bin/echo",argv);
                   exit(127);
               // ----> watcher runn... 
               } else {
                   // sleep for some time
-                  sleep(100);
+                  int sleep_time = 30;
+                  printf("Starting Sleep for %d seconds.\n",sleep_time);
+                  sleep(sleep_time);
+                  printf("Waking up.\n");
               }
               
             }
@@ -94,7 +95,6 @@ int main( int argc, char **argv ) {
     if(cnt > maxCnt) break;
   }
 
-
   ( void ) inotify_rm_watch(fd, wd);
   ( void ) close(fd);
 
@@ -102,5 +102,5 @@ int main( int argc, char **argv ) {
 
 }
 
-//--------------------------------------------------------------------
-// EOF
+/* ---------------------------------------------------------------- */
+/* EOF */
