@@ -811,36 +811,6 @@ gpstime_t incGpsTime(gpstime_t g0, double dt)
 	return(g1);
 }
 
-// Get real Time
-void getrealtime(int *ryear,int *rmonth,int *rday,int *rhour,int *rmin,double *rsec)
-{
-	time_t rawtime;
-  	struct tm * timeinfo;
-  	struct tm *gmtime(const time_t *timer);
-
-	struct tm *gtime;
-    time_t now;
-
-    /* Read the current system time */
-    time(&now);
-
-	/* Convert the system time to GMT (now UTC) */
-	gtime = gmtime(&now);
-
-	time ( &rawtime );
-	timeinfo = localtime ( &rawtime );
-	printf ( "Current local time and date: %s", asctime (timeinfo) );
-	*ryear = 1900 + timeinfo->tm_year;
-	*rmonth = 1+timeinfo->tm_mon;
-	*rday = timeinfo->tm_mday;
-	*rhour = timeinfo->tm_hour;
-  	*rmin = timeinfo->tm_min;
-  	*rsec = timeinfo->tm_sec;
-	return ;
-}
-
-
-
 /*Read generated XML File */
 int readXMLAll(ephem_t eph[][MAX_SAT], ionoutc_t *ionoutc , const char *fname)
 {
@@ -930,17 +900,7 @@ int readXMLAll(ephem_t eph[][MAX_SAT], ionoutc_t *ionoutc , const char *fname)
                 // printf("\n");
                 prntvar=1;
                 sv = atoi(innertag)-1;
-				int ryear,rmonth,rday,rhour,rmin;
-				double rsec;
-				// getrealtime(& ryear,&rmonth,&rday,&rhour,&rmin,&rsec);
-                // t.y=ryear;
-                // t.m=rmonth;
-                // t.d=rday;
-                // t.hh=rhour;
-                // t.mm=rmin;
-                // t.sec=rsec;
-			
-				t.y=2013;
+                t.y=2013;
                 t.m=4;
                 t.d=4;
                 t.hh=8;
@@ -1879,7 +1839,7 @@ int checkSatVisibility(ephem_t eph, gpstime_t g, double *xyz, double elvMask, do
 	neu2azel(azel, neu);
 	int c;
 	printf("%lf %lf \n", azel[1]*R2D , elvMask);
-	if (azel[1]*R2D> elvMask)
+	if (abs(azel[1]*R2D) > elvMask)
 	{
 		// printf("visible");
 		c=1;
