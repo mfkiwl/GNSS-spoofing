@@ -43,7 +43,7 @@ int main( int argc, char **argv ) {
   printf("Event will be watched for %d updates.\n",maxCnt);
   pid_t tmp = 0;
 
-  // always true
+  /* keep watching forever until keyboard interrupt */
   while(1) {
     int length, i = 0;
     length = read(fd, buffer, BUF_LEN);
@@ -63,22 +63,33 @@ int main( int argc, char **argv ) {
         else if(event->mask & IN_MODIFY) {
 
             if(strcmp(event->name,"gps_ephemeris.xml") == 0) {
-              // This should trigger xml -> rinex convertor
+              /* 
+               * This should trigger xml -> rinex convertor
+               */
+              /* wait for 2 sec for file to appear completely */
+              sleep(5);
               if (tmp)
                 kill(tmp, SIGKILL);
               printf("Calling xml to rinex convertor...\n");
-              // -- we fork a process --> 
+              /* fork a process */ 
               pid_t pid=fork();
               tmp = pid;
               if(pid == 0) {
-              // -simc ( xml, location,frequency sample )
-                  static char *argv[]={"echo","Testing echo for gps-sdr-sim.",NULL};
-                  execv("/bin/echo",argv);
+              /* simc ( xml, location,frequency sample ) */
+                  static char *argv[]={"gps-sdr-sim",
+                          "-e","/home/gnss-pc1/tmp/gps_ephemeris.xml",
+                          "-d","100","-s","4e6",NULL};
+                  execv("/home/gnss-pc1/bin/gps-sdr-sim",argv);
                   exit(127);
               // ----> watcher runn... 
               } else {
-                  // sleep for some time
-                  int sleep_time = 30;
+                  /*
+                   * After detection of gps_ephemeris.xml convertor is
+                   * triggered. Script should ideally give some time to
+                   * gps-sdr-sim to process xml before starting watcher
+                   * again.
+                   */
+                  int sleep_time = 10;
                   printf("Starting Sleep for %d seconds.\n",sleep_time);
                   sleep(sleep_time);
                   printf("Waking up.\n");
