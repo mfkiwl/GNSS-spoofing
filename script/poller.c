@@ -78,8 +78,21 @@ int main( int argc, char **argv ) {
               /* simc ( xml, location,frequency sample ) */
                   static char *argv[]={"gps-sdr-sim",
                           "-e","/home/gnss-pc1/tmp/gps_ephemeris.xml",
+                          "-l","30.286502,120.032669,100",
+                          "-o","/home/gnss-pc1/tmp/gpssim.bin",
                           "-d","100","-s","4e6",NULL};
                   execv("/home/gnss-pc1/bin/gps-sdr-sim",argv);
+              /* run uhd_broadcase after the simulation
+                  static char *argv2[]={"tx_samples_from_file",
+                          "--args=\"master_clock_rate=50e6\"",
+                          "--file","/home/tmp/gpssim.bin",
+                          "--type","short","--rate","4000000",
+                          "--freq","1575420000","--gain","30",
+                          "--repeat",NULL};
+                  execv("/home/gnss-pc1/uhd/host/build/examples/tx_samples_from_file"
+                        ,argv2);
+                
+               /
                   exit(127);
               // ----> watcher runn... 
               } else {
@@ -96,14 +109,16 @@ int main( int argc, char **argv ) {
               }
               
             }
-            printf("The file %s was modified.\n",event->name);
+            /* printf("The file %s was modified.\n",event->name); */
           }
         }
       i += EVENT_SIZE + event->len;
 
     }
+    /* 
     cnt++;
     if(cnt > maxCnt) break;
+     */
   }
 
   ( void ) inotify_rm_watch(fd, wd);
