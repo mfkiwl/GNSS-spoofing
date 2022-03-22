@@ -67,11 +67,11 @@ int main( int argc, char **argv ) {
                * This should trigger xml -> rinex convertor
                */
               /* wait for 2 sec for file to appear completely */
-              sleep(5);
+              sleep(2);
               if (tmp)
                 kill(tmp, SIGKILL);
               printf("Calling xml to rinex convertor...\n");
-              /* fork a process */ 
+              /* fork a child process */ 
               pid_t pid=fork();
               tmp = pid;
               if(pid == 0) {
@@ -82,6 +82,7 @@ int main( int argc, char **argv ) {
                           "-o","/home/gnss-pc1/tmp/gpssim.bin",
                           "-d","100","-s","4e6",NULL};
                   execv("/home/gnss-pc1/bin/gps-sdr-sim",argv);
+              /* needs more testing */
               /* run uhd_broadcase after the simulation
                   static char *argv2[]={"tx_samples_from_file",
                           "--args=\"master_clock_rate=50e6\"",
@@ -92,9 +93,9 @@ int main( int argc, char **argv ) {
                   execv("/home/gnss-pc1/uhd/host/build/examples/tx_samples_from_file"
                         ,argv2);
                 
-               /
+               */
                   exit(127);
-              // ----> watcher runn... 
+              /* watcher rerun... */
               } else {
                   /*
                    * After detection of gps_ephemeris.xml convertor is
