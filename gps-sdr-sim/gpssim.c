@@ -812,313 +812,278 @@ gpstime_t incGpsTime(gpstime_t g0, double dt)
 }
 
 // Get real Time
-void getrealtime(int *ryear,int *rmonth,int *rday,int *rhour,int *rmin,double *rsec)
+void getrealtime(int *ryear,int *rmonth,int *rday,int *rhour,int *rmin,double *rsec)    
 {
-	time_t rawtime;
-  	struct tm * timeinfo;
-  	struct tm *gmtime(const time_t *timer);
-
-	struct tm *gtime;
-    time_t now;
-
+	time_t rawtime;                         // time_t is a type defined in time.h
+  	struct tm * timeinfo;                   // time structure
+  	struct tm *gmtime(const time_t *timer); // function prototype
+    
+	struct tm *gtime;                       // time structure
+    time_t now;                             
+ 
     /* Read the current system time */
     time(&now);
-
+ 
 	/* Convert the system time to GMT (now UTC) */
 	gtime = gmtime(&now);
-
-	time ( &rawtime );
-	timeinfo = localtime ( &rawtime );
-	// printf ( "Current local time and date: %s", asctime (timeinfo) );
-	*ryear = 1900 + timeinfo->tm_year;
-	*rmonth = 1+timeinfo->tm_mon;
-	*rday = timeinfo->tm_mday;
-	*rhour = timeinfo->tm_hour;
-  	*rmin = timeinfo->tm_min;
-  	*rsec = timeinfo->tm_sec;
+ 
+	time ( &rawtime );      // get current time
+	timeinfo = localtime ( &rawtime );  // convert to local time
+ 
+	*ryear = 1900 + timeinfo->tm_year;  // get year
+	*rmonth = 1+timeinfo->tm_mon;       // get month
+	*rday = timeinfo->tm_mday;          // get day
+	*rhour = timeinfo->tm_hour;         // get hour
+  	*rmin = timeinfo->tm_min;           // get minute
+  	*rsec = timeinfo->tm_sec;           // get second
 	return ;
 }
 
 
 
 /*Read generated XML File */
-int readXMLAll(ephem_t eph[][MAX_SAT], ionoutc_t *ionoutc , const char *fname)
+int readXMLAll(ephem_t eph[][MAX_SAT], ionoutc_t *ionoutc , const char *fname)  
 {
-	FILE *fp;
-	int ieph;
-    char str[150];
-    int sv;
-    datetime_t t;
-	gpstime_t g;
-	gpstime_t g0;
-    // int flags = 0x0;
-	double dt;
-
-
+	FILE *fp;               // file pointer
+	int ieph;               // ephemeris index
+    char str[150];          // string buffer    
+    int sv;                 // satellite number
+    datetime_t t;           // time
+	// datetime_t rt;
+	gpstime_t g;// time
+	gpstime_t g0;// time
+	double dt;      // time step
+ 
+    // open file
     if (NULL==(fp=fopen(fname, "rt")))              
         printf("-1");
-    for (ieph=0; ieph<EPHEM_ARRAY_SIZE; ieph++)
-		for (sv=0; sv<MAX_SAT; sv++)
-			eph[ieph][sv].vflg = 0;
+    for (ieph=0; ieph<EPHEM_ARRAY_SIZE; ieph++) 
+		for (sv=0; sv<MAX_SAT; sv++)            
+			eph[ieph][sv].vflg = 0;             // clear flags
+ 
+    g0.week = -1;           // initialize
+	ieph = 0;           // initialize
 
-	// inoutc values hardcoded
+	// int ryear,rmonth,rday,rhour,rmin;   // read time
+	// double rsec;
+	// getrealtime(& ryear,&rmonth,&rday,&rhour,&rmin,&rsec);  // read time
+	// rt.y=ryear;
+	// rt.m=rmonth;
+	// rt.d=rday;
+	// rt.hh=rhour;
+	// rt.mm=rmin;
+	// rt.sec=rsec;
 
-	/*		ionoutc->alpha0 = 0;
-
-			ionoutc->alpha1 = 0;
-
-			ionoutc->alpha2 = 0;
-
-			ionoutc->alpha3 = 0;
-			flags |= 0x1;
-
-			ionoutc->beta0 = 0;
-
-			ionoutc->beta1 = 0;
-
-			ionoutc->beta2 = 0;
-
-			ionoutc->beta3 = 0;
-
-			flags |= 0x1<<1;
-			ionoutc->A0 = 0;
-			ionoutc->A1 = 0;
-			ionoutc->tot = 0;
-			ionoutc->wnt = 1734;
-
-			if (ionoutc->tot%4096==0)
-				flags |= 0x1<<2;
-			ionoutc->dtls = 0;
-
-			flags |= 0x1<<3; */
-	// ionoutc->vflg = FALSE;
-	// if (flags==0xF) // Read all Iono/UTC lines
-		// ionoutc->vflg = TRUE;
-
-    //read emphimeris block
-
-    g0.week = -1;
-	ieph = 0;
-    while(1)
+    while(1)            
     {
-        if (NULL==fgets(str, 150, fp))
+        if (NULL==fgets(str, 150, fp))      // read a line
 			break;
-        int cnt=0;
-        while(cnt<150 && str[cnt]!='<')
+        int cnt=0;                                          
+        while(cnt<150 && str[cnt]!='<')     // skip to '<'
             cnt++;
-        if(cnt<150 && str[cnt]=='<')
+        if(cnt<150 && str[cnt]=='<')       
         {
             char tag[20]="";                                //variable  
             char innertag[150]="";                          //value
             int l,r,k;                                      //indices of '<' brackets
             l=cnt;
-            while(cnt<150 && str[cnt]!='>')
+            while(cnt<150 && str[cnt]!='>')     // read tag
             {
                 cnt++;
             }
             r=cnt;
-            while(cnt<150 && str[cnt]!='<')
+            while(cnt<150 && str[cnt]!='<')     // read value
                 cnt++;
             k=cnt;
-            if(cnt>=150)
-                continue;
-            strncpy(tag,str+l+1,r-l-1);
-            strncpy(innertag,str+r+1,k-r-1);
+            if(cnt>=150)                        // end of line
+                continue;   
+            strncpy(tag,str+l+1,r-l-1);         // copy tag
+            strncpy(innertag,str+r+1,k-r-1);    // copy value
             int prntvar=0;                              // print variable
-            if(strcmp(tag,"PRN")==0)
+            if(strcmp(tag,"PRN")==0)            
             {
-                // printf("\n");
-                prntvar=1;
-                sv = atoi(innertag)-1;
-				int ryear,rmonth,rday,rhour,rmin;
+                prntvar=1;                        // print variable
+                sv = atoi(innertag)-1;              // satellite number
+				int ryear,rmonth,rday,rhour,rmin;   // read time
 				double rsec;
-				getrealtime(& ryear,&rmonth,&rday,&rhour,&rmin,&rsec);
+				getrealtime(& ryear,&rmonth,&rday,&rhour,&rmin,&rsec);  // read time
                 t.y=ryear;
                 t.m=rmonth;
                 t.d=rday;
                 t.hh=rhour;
                 t.mm=rmin;
                 t.sec=rsec;
-			
-				// t.y=2013;
-                // t.m=4;
-                // t.d=4;
-                // t.hh=8;
-                // t.mm=0;
-                // t.sec=0.0;
-
-
-                date2gps(&t, &g);
+				// t=rt;
+ 
+                date2gps(&t, &g);           // convert date to gps time
 		
                 if (g0.week==-1)
                     g0 = g;
-
+ 
                 // Check current time of clock
-                dt = subGpsTime(g, g0);
+                dt = subGpsTime(g, g0);     
                 
                 if (dt>SECONDS_IN_HOUR)
                 {
                     g0 = g;
                     ieph++;                          // a new set of ephemerides
-
-                    if (ieph>=EPHEM_ARRAY_SIZE)
+ 
+                    if (ieph>=EPHEM_ARRAY_SIZE)     // too many ephemerides
                         break;
                 }
-
+ 
                 // Date and time
                 eph[ieph][sv].t = t;
-
+ 
                 // SV CLK
                 eph[ieph][sv].toc = g;
-
+ 
             }
-            else if(strcmp(tag,"M_0")==0)
+            else if(strcmp(tag,"M_0")==0)               
             {
                 prntvar=1;
-                eph[ieph][sv].m0 = atof(innertag);
+                eph[ieph][sv].m0 = atof(innertag);      // mean anomaly at reference time
             }
             else if(strcmp(tag,"delta_n")==0)
             {
                 prntvar=1;
-                eph[ieph][sv].deltan = atof(innertag);
+                eph[ieph][sv].deltan = atof(innertag);      // mean motion difference from computed value
             }
             else if(strcmp(tag,"ecc")==0)
             {
                 prntvar=1;
-                eph[ieph][sv].ecc = atof(innertag);
-                eph[ieph][sv].sq1e2 = sqrt(1.0 - eph[ieph][sv].ecc*eph[ieph][sv].ecc);
+                eph[ieph][sv].ecc = atof(innertag);         // eccentricity
+                eph[ieph][sv].sq1e2 = sqrt(1.0 - eph[ieph][sv].ecc*eph[ieph][sv].ecc);      // sqrt(1-ecc^2)
             }
             else if(strcmp(tag,"sqrtA")==0)
             {
                 prntvar=1;
-                eph[ieph][sv].sqrta = atof(innertag);
-                eph[ieph][sv].A = eph[ieph][sv].sqrta * eph[ieph][sv].sqrta;
-                eph[ieph][sv].n = sqrt(GM_EARTH/(eph[ieph][sv].A*eph[ieph][sv].A*eph[ieph][sv].A)) + eph[ieph][sv].deltan;
+                eph[ieph][sv].sqrta = atof(innertag);       // square root of the semi-major axis
+                eph[ieph][sv].A = eph[ieph][sv].sqrta * eph[ieph][sv].sqrta;        // semi-major axis
+                eph[ieph][sv].n = sqrt(GM_EARTH/(eph[ieph][sv].A*eph[ieph][sv].A*eph[ieph][sv].A)) + eph[ieph][sv].deltan;      // mean motion
             }
             else if(strcmp(tag,"OMEGA_0")==0)
             {
                 prntvar=1;
-                eph[ieph][sv].omg0 = atof(innertag);  
+                eph[ieph][sv].omg0 = atof(innertag);        // longitude of ascending node of orbit plane at weekly epoch
             }
             else if(strcmp(tag,"i_0")==0)
             {
                 prntvar=1;
-                eph[ieph][sv].inc0 = atof(innertag);                
+                eph[ieph][sv].inc0 = atof(innertag);                    // inclination angle at reference time
             }
             else if(strcmp(tag,"omega")==0)
             {
                 prntvar=1;
-                eph[ieph][sv].aop = atof(innertag); 
+                eph[ieph][sv].aop = atof(innertag);     // argument of perigee
             }
             else if(strcmp(tag,"OMEGAdot")==0)
             {
                 prntvar=1;
                 eph[ieph][sv].omgdot = atof(innertag);
-				eph[ieph][sv].omgkdot = eph[ieph][sv].omgdot - OMEGA_EARTH; 
+				eph[ieph][sv].omgkdot = eph[ieph][sv].omgdot - OMEGA_EARTH;         // rate of right ascension
             }
             else if(strcmp(tag,"idot")==0)
             {
                 prntvar=1;
-                eph[ieph][sv].idot = atof(innertag);
+                eph[ieph][sv].idot = atof(innertag);        // rate of inclination angle
             }
             else if(strcmp(tag,"Cuc")==0)
             {
                 prntvar=1;
-                eph[ieph][sv].cuc = atof(innertag);
+                eph[ieph][sv].cuc = atof(innertag);     // argument of latitude
             }
             else if(strcmp(tag,"Cus")==0)
             {
                 prntvar=1;
-                eph[ieph][sv].cus = atof(innertag);
+                eph[ieph][sv].cus = atof(innertag);     // orbit radius
             }
             else if(strcmp(tag,"Crc")==0)
             {
                 prntvar=1;
-                eph[ieph][sv].crc = atof(innertag);
+                eph[ieph][sv].crc = atof(innertag);     // orbit radius
             }
             else if(strcmp(tag,"Crs")==0)
             {
                 prntvar=1;
-                eph[ieph][sv].crs = atof(innertag);
+                eph[ieph][sv].crs = atof(innertag);     // orbit radius
             }
             else if(strcmp(tag,"Cic")==0)
             {
                 prntvar=1;
-                eph[ieph][sv].cic = atof(innertag);
+                eph[ieph][sv].cic = atof(innertag);     // orbit radius
             }
             else if(strcmp(tag,"Cis")==0)
             {
                 prntvar=1;
-                eph[ieph][sv].cis = atof(innertag);
+                eph[ieph][sv].cis = atof(innertag);     // orbit radius
             }
             else if(strcmp(tag,"af0")==0)
             {
                 prntvar=1;
-                eph[ieph][sv].af0 = atof(innertag);
+                eph[ieph][sv].af0 = atof(innertag);     // clock bias
             }
             else if(strcmp(tag,"af1")==0)
             {
                 prntvar=1;
-                eph[ieph][sv].af1 = atof(innertag);
+                eph[ieph][sv].af1 = atof(innertag);     // clock bias
             }
             else if(strcmp(tag,"af2")==0)
             {
                 prntvar=1;
-                eph[ieph][sv].af2 = atof(innertag);
+                eph[ieph][sv].af2 = atof(innertag); // clock drift
             }
-            else if(strcmp(tag,"IODE_SF2")==0 || strcmp(tag,"IODE_SF3")==0)
+            else if(strcmp(tag,"IODE_SF2")==0 || strcmp(tag,"IODE_SF3")==0)     
             {
                 prntvar=1;
-                eph[ieph][sv].iode = (int)atof(innertag);             
+                eph[ieph][sv].iode = (int)atof(innertag);             // IODE
             }
             else if(strcmp(tag,"code_on_L2")==0)
             {
                 prntvar=1;
-                eph[ieph][sv].codeL2 = (int)atof(innertag);
+                eph[ieph][sv].codeL2 = (int)atof(innertag);     // code on L2
             }
             else if(strcmp(tag,"SV_health")==0)
             {
-                prntvar=1;
-                eph[ieph][sv].svhlth = (int)atof(innertag);
-                if ((eph[ieph][sv].svhlth>0) && (eph[ieph][sv].svhlth<32))
+                prntvar=1;  
+                eph[ieph][sv].svhlth = (int)atof(innertag);         // SV health
+                if ((eph[ieph][sv].svhlth>0) && (eph[ieph][sv].svhlth<32))      
 			        eph[ieph][sv].svhlth += 32;
             }
             else if(strcmp(tag,"TGD")==0)
             {
                 prntvar=1;
-                eph[ieph][sv].tgd = atof(innertag);
+                eph[ieph][sv].tgd = atof(innertag);         // group delay differential
             }
             else if(strcmp(tag,"IODC")==0)
             {
                 prntvar=1;
-                eph[ieph][sv].iodc = (int)atof(innertag);
+                eph[ieph][sv].iodc = (int)atof(innertag);       // issue of data clock
             }
-			else if(strcmp(tag,"toe")==0)
+			else if(strcmp(tag,"toe")==0 || strcmp(tag,"toc")==0)               
             {
                 prntvar=1;
-                eph[ieph][sv].toe.sec = (int)atof(innertag);
-				eph[ieph][sv].toe.week = 1734;
+                eph[ieph][sv].toe.sec = (int)atof(innertag);            // time of ephemeris
             }
-            // if(prntvar==1)
+			else if(strcmp(tag,"WN")==0)
+            {
+                prntvar=1;
+				eph[ieph][sv].toe.week = (int)atof(innertag) +1024;         // week number
+            }
+ 
+			eph[ieph][sv].vflg = 1;
+			// if(prntvar==1)
             // {
             //     printf("%s , %d , %d\n",tag,ieph,sv);
             // }
-			eph[ieph][sv].vflg = 1;
         }
     }
-	// eph[ieph][sv].vflg = 1;
-    fclose(fp);
-    if (g0.week>=0)
+    fclose(fp);     // close the file
+    if (g0.week>=0)         
 		ieph += 1;
-
+ 
     return(ieph);
-} 
-
-
-
-
-
-
+}
 
 /*! \brief Read Ephemeris data from the RINEX Navigation file */
 /*  \param[out] eph Array of Output SV ephemeris data
@@ -1865,11 +1830,6 @@ int checkSatVisibility(ephem_t eph, gpstime_t g, double *xyz, double elvMask, do
 	if (eph.vflg != 1)
 		return (-1); // Invalid
 
-	// for(int i=0;i<3;i++)
-	// {
-	// 	printf("%lf\n", xyz[i] );
-	// }
-	// printf("\n");
 	xyz2llh(xyz,llh);
 	ltcmat(llh, tmat);
 
@@ -1879,6 +1839,7 @@ int checkSatVisibility(ephem_t eph, gpstime_t g, double *xyz, double elvMask, do
 	neu2azel(azel, neu);
 	int c;
 	// printf("%lf %lf \n", azel[1]*R2D , elvMask);
+	// if (abs(azel[1]*R2D)> elvMask)
 	if (azel[1]*R2D> elvMask)
 	{
 		// printf("visible");
@@ -1889,10 +1850,7 @@ int checkSatVisibility(ephem_t eph, gpstime_t g, double *xyz, double elvMask, do
 		// printf("not visible");
 		c=0;
 	}
-
-		// return (1); // Visible
-	// else
-	return (c); // Invisible
+	return (c); 
 }
 
 int allocateChannel(channel_t *chan, ephem_t *eph, ionoutc_t ionoutc, gpstime_t grx, double *xyz, double elvMask)
