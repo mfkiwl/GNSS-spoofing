@@ -913,9 +913,23 @@ int readXMLAll(ephem_t eph[][MAX_SAT], ionoutc_t *ionoutc , const char *fname)
                 t.hh=rhour;
                 t.mm=rmin;
                 t.sec=rsec;
+<<<<<<< HEAD
 				// t=rt;
  
                 date2gps(&t, &g);           // convert date to gps time
+=======
+			
+                /*
+				t.y=2013;
+                t.m=4;
+                t.d=4;
+                t.hh=8;
+                t.mm=0;
+                t.sec=0.0;
+                 */
+
+                date2gps(&t, &g);
+>>>>>>> ae501b5be7af0799d796a178ba7b1ac512d1257f
 		
                 if (g0.week==-1)
                     g0 = g;
@@ -1839,8 +1853,12 @@ int checkSatVisibility(ephem_t eph, gpstime_t g, double *xyz, double elvMask, do
 	neu2azel(azel, neu);
 	int c;
 	// printf("%lf %lf \n", azel[1]*R2D , elvMask);
+<<<<<<< HEAD
 	// if (abs(azel[1]*R2D)> elvMask)
 	if (azel[1]*R2D> elvMask)
+=======
+	if (abs(azel[1]*R2D)> elvMask)
+>>>>>>> ae501b5be7af0799d796a178ba7b1ac512d1257f
 	{
 		// printf("visible");
 		c=1;
