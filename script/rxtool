@@ -10,21 +10,35 @@
 
 #---------------------------------------------------------------------
 # Control Parameters 
-gnss_src_path=$HOME/gnss-sdr/src/algorithms/PVT/
+
+gnss_src_path=$HOME/prefix-3.8/gnss-sdr/src/algorithms/PVT/
 gnss_build_path=$HOME/gnss-sdr/build/
-config_file_name=sdrconfig.conf
+#config_file_name=with_our_recorded_data_usrp2932.conf
+config_file_name=sampletest.conf
 config_file=$HOME/work/$config_file_name
+echo $config_file
 
 #---------------------------------------------------------------------
 # Optional Compile Flag processing 
-if [[ $1 == "--compile" ]]
+if [[ $1 == "--makesdr" ]]
 then
     echo "Starting compilation..."
     pushd $gnss_build_path
     cmake ..
     make
     popd
+    ln -sf $HOME/gnss-sdr/install/gnss-sdr $HOME/bin/
     echo "Ending compilation..."
+    exit 0
+fi
+if [[ $1 == "--makegps" ]]
+then
+# GPS-SDR-SIM
+    pushd $HOME/gps-sdr-sim
+    gcc gpssim.c -lm -O3 -o gps-sdr-sim
+    ln -sf $HOME/gps-sdr-sim/gps-sdr-sim $HOME/bin/
+    popd
+    exit 0
 fi
 
 #---------------------------------------------------------------------
@@ -38,7 +52,10 @@ rm -rf *
 # copies cofig to tmp folder for run
 cp $config_file .
 
-gnss-sdr --config_file=$config_file_name
+pushd $HOME/prefix-3.8/
+. setup_env.sh
+/home/gnss-pc1/prefix-3.8/bin/gnss-sdr -c $config_file_name
+popd
 
 echo "Printing Rinex File ... "
 # wait for rinex file to appear

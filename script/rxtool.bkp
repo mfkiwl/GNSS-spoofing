@@ -1,0 +1,64 @@
+#!/bin/bash
+#---------------------------------------------------------------------
+# File information
+
+# Name          : rxtool
+# Purpose       : Simplify compiling and testing workflow
+# License       : BSD3 
+# Revision      : 0.1.220107
+# Author        : smk (sudhanshumohan781@gmail.com)
+
+#---------------------------------------------------------------------
+# Control Parameters 
+gnss_src_path=$HOME/gnss-sdr/src/algorithms/PVT/
+gnss_build_path=$HOME/gnss-sdr/build/
+config_file_name=sdrconfig.conf
+config_file=$HOME/work/$config_file_name
+
+#---------------------------------------------------------------------
+# Optional Compile Flag processing 
+if [[ $1 == "--compile" ]]
+then
+    echo "Starting compilation..."
+    pushd $gnss_build_path
+    cmake ..
+    make
+    popd
+    echo "Ending compilation..."
+fi
+
+#---------------------------------------------------------------------
+# Running GNSS-SDR
+
+echo "Starting first run..."
+mkdir -p $HOME/tmp/
+pushd $HOME/tmp/
+# cleanup previous run
+rm -rf *
+# copies cofig to tmp folder for run
+cp $config_file .
+
+gnss-sdr --config_file=$config_file_name
+
+echo "Printing Rinex File ... "
+# wait for rinex file to appear
+sleep 2
+if [[ ! -f `find . -name "*\.??N"` ]]
+then
+    echo "Couldn't locate Rinex File."
+    echo "Exiting, Please try running rxtool again."
+    exit 0
+fi
+# Prints recorded rinex file
+cat < `find . -name "*\.??N"`
+#---------------------------------------------------------------------
+# Running GPS-SDR-SIM with the rinex just produced
+# currently its sequential but it should be done parallely
+gps-sdr-sim -e `find . -name "*\.??N"` -s 4000000 -d 100
+
+# then run on gpssim.bin
+popd
+
+echo "Ending Run."
+#---------------------------------------------------------------------
+# EOF

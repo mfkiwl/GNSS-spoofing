@@ -1,0 +1,33 @@
+#!/bin/bash
+#---------------------------------------------------------------------
+# File information
+
+# Name          : gnss-sdr-harness-mod
+# Purpose       : Simplify compiling and testing workflow
+# License       : BSD3 
+# Revision      : 0.2.220407
+# Author        : smk (sudhanshumohan781@gmail.com)
+
+# GNSS-SDR shell script that enables the remote GNSS-SDR restart telecommand
+# usage: ./gnss-sdr-harness.sh ./gnss-sdr -c config_file.conf
+
+# SPDX-FileCopyrightText: Javier Arribas <javier.arribas(at)cttc.es>
+# SPDX-License-Identifier: GPL-3.0-or-later
+#---------------------------------------------------------------------
+# Control Parameters 
+SETUP_ENV=$HOME/prefix4.0/
+#---------------------------------------------------------------------
+# evironment setup
+pushd $SETUP_ENV
+. setup_env.sh
+popd
+
+echo $@
+$@
+while [ $? -eq 42 ]
+do
+ echo "restarting GNSS-SDR..."
+ $@
+done
+#---------------------------------------------------------------------
+# EOF
