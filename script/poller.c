@@ -67,7 +67,7 @@ int main( int argc, char **argv ) {
                * This should trigger xml -> rinex convertor
                */
               /* wait for 2 sec for file to appear completely */
-              sleep(2);
+              sleep(5);
               if (tmp)
                 kill(tmp, SIGKILL);
               printf("Calling xml to rinex convertor...\n");
@@ -75,15 +75,24 @@ int main( int argc, char **argv ) {
               pid_t pid=fork();
               tmp = pid;
               if(pid == 0) {
+              /*
+               * Decided to move the further execution to bash worker
+               * script as way to easily change parameters of other
+               * programs without recompiling poller again and again.
+               */
+                  static char *argv[]={"/home/gnss-pc1/bin/worker",NULL};
+                  execv("/home/gnss-pc1/bin/worker",argv);
               /* simc ( xml, location,frequency sample ) */
+              /*
                   static char *argv[]={"gps-sdr-sim",
                           "-e","/home/gnss-pc1/tmp/gps_ephemeris.xml",
                           "-l","30.286502,120.032669,100",
                           "-o","/home/gnss-pc1/tmp/gpssim.bin",
                           "-d","100","-s","4e6",NULL};
                   execv("/home/gnss-pc1/bin/gps-sdr-sim",argv);
+              */
               /* needs more testing */
-              /* run uhd_broadcase after the simulation
+              /* run uhd_broadcast after the simulation
                   static char *argv2[]={"tx_samples_from_file",
                           "--args=\"master_clock_rate=50e6\"",
                           "--file","/home/tmp/gpssim.bin",
@@ -92,8 +101,8 @@ int main( int argc, char **argv ) {
                           "--repeat",NULL};
                   execv("/home/gnss-pc1/uhd/host/build/examples/tx_samples_from_file"
                         ,argv2);
+                */
                 
-               */
                   exit(127);
               /* watcher rerun... */
               } else {

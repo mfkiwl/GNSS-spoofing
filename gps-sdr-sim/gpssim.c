@@ -864,16 +864,6 @@ int readXMLAll(ephem_t eph[][MAX_SAT], ionoutc_t *ionoutc , const char *fname)
     g0.week = -1;           // initialize
 	ieph = 0;           // initialize
 
-	// int ryear,rmonth,rday,rhour,rmin;   // read time
-	// double rsec;
-	// getrealtime(& ryear,&rmonth,&rday,&rhour,&rmin,&rsec);  // read time
-	// rt.y=ryear;
-	// rt.m=rmonth;
-	// rt.d=rday;
-	// rt.hh=rhour;
-	// rt.mm=rmin;
-	// rt.sec=rsec;
-
     while(1)            
     {
         if (NULL==fgets(str, 150, fp))      // read a line
@@ -906,46 +896,37 @@ int readXMLAll(ephem_t eph[][MAX_SAT], ionoutc_t *ionoutc , const char *fname)
                 sv = atoi(innertag)-1;              // satellite number
 				int ryear,rmonth,rday,rhour,rmin;   // read time
 				double rsec;
-				getrealtime(& ryear,&rmonth,&rday,&rhour,&rmin,&rsec);  // read time
-                t.y=ryear;
-                t.m=rmonth;
-                t.d=rday;
-                t.hh=rhour;
-                t.mm=rmin;
-                t.sec=rsec;
-<<<<<<< HEAD
+				// getrealtime(& ryear,&rmonth,&rday,&rhour,&rmin,&rsec);  // read time
+                // t.y=ryear;
+                // t.m=rmonth;
+                // t.d=rday;
+                // t.hh=rhour;
+                // t.mm=rmin;
+                // t.sec=rsec;
+				t.y=2022;
+                t.m=4;
+                t.d=16;
+                t.hh=12;
+                t.mm=0;
+                t.sec=0.0;
 				// t=rt;
  
                 date2gps(&t, &g);           // convert date to gps time
-=======
-			
-                /*
-				t.y=2013;
-                t.m=4;
-                t.d=4;
-                t.hh=8;
-                t.mm=0;
-                t.sec=0.0;
-                 */
-
-                date2gps(&t, &g);
->>>>>>> ae501b5be7af0799d796a178ba7b1ac512d1257f
 		
                 if (g0.week==-1)
                     g0 = g;
  
                 // Check current time of clock
                 dt = subGpsTime(g, g0);     
-                
+                // printf("\n%f\n",dt);
                 if (dt>SECONDS_IN_HOUR)
                 {
                     g0 = g;
                     ieph++;                          // a new set of ephemerides
- 
                     if (ieph>=EPHEM_ARRAY_SIZE)     // too many ephemerides
                         break;
                 }
- 
+				// printf("\n%d\n",ieph);
                 // Date and time
                 eph[ieph][sv].t = t;
  
@@ -1082,7 +1063,7 @@ int readXMLAll(ephem_t eph[][MAX_SAT], ionoutc_t *ionoutc , const char *fname)
 			else if(strcmp(tag,"WN")==0)
             {
                 prntvar=1;
-				eph[ieph][sv].toe.week = (int)atof(innertag) +1024;         // week number
+				eph[ieph][sv].toe.week = (int)atof(innertag) +2048;         // week number
             }
  
 			eph[ieph][sv].vflg = 1;
@@ -1095,7 +1076,7 @@ int readXMLAll(ephem_t eph[][MAX_SAT], ionoutc_t *ionoutc , const char *fname)
     fclose(fp);     // close the file
     if (g0.week>=0)         
 		ieph += 1;
- 
+	// printf("\n%d\n",ieph);
     return(ieph);
 }
 
@@ -1851,14 +1832,45 @@ int checkSatVisibility(ephem_t eph, gpstime_t g, double *xyz, double elvMask, do
 	subVect(los, pos, xyz);
 	ecef2neu(los, tmat, neu);
 	neu2azel(azel, neu);
+	// for(int i=0;i<3;i++)
+	// {
+	// 	printf("%f  ",pos[i]);
+	// }
+	// printf("\n");
+	// for(int i=0;i<3;i++)
+	// {
+	// 	printf("%f  ",vel[i]);
+	// }
+	// printf("\n");
+	// for(int i=0;i<3;i++)
+	// {
+	// 	printf("%f  ",clk[i]);
+	// }
+	// printf("\n");
+	// for(int i=0;i<3;i++)
+	// {
+	// 	printf("%f  ",los[i]);
+	// }
+	// printf("\n");
+	// for(int i=0;i<3;i++)
+	// {
+	// 	printf("%f  ",llh[i]);
+	// }
+	// printf("\n");
+	// for(int i=0;i<3;i++)
+	// {
+	// 	printf("%f  ",neu[i]);
+	// }
+	// printf("\n");
+	// for(int i=0;i<2;i++)
+	// {
+	// 	printf("%f  ",azel[i]);
+	// }
+	// printf("\n");
 	int c;
 	// printf("%lf %lf \n", azel[1]*R2D , elvMask);
-<<<<<<< HEAD
-	// if (abs(azel[1]*R2D)> elvMask)
-	if (azel[1]*R2D> elvMask)
-=======
 	if (abs(azel[1]*R2D)> elvMask)
->>>>>>> ae501b5be7af0799d796a178ba7b1ac512d1257f
+	// if (azel[1]*R2D> elvMask)
 	{
 		// printf("visible");
 		c=1;
@@ -2228,8 +2240,9 @@ int main(int argc, char *argv[])
 	// Read ephemeris
 	////////////////////////////////////////////////////////////
 
-	// neph = readRinexNavAll(eph, &ionoutc, navfile);
-	neph = readXMLAll(eph,&ionoutc,navfile);
+	neph = readRinexNavAll(eph, &ionoutc, navfile);
+	// neph = readXMLAll(eph,&ionoutc,navfile);
+	// printf("\n%d\n",neph);
 
 	if (neph==0)
 	{
@@ -2321,17 +2334,17 @@ int main(int argc, char *argv[])
 		}
 		else
 		{
-			if (subGpsTime(g0, gmin)<0.0 || subGpsTime(gmax, g0)<0.0)
-			{
-				fprintf(stderr, "ERROR: Invalid start time.\n");
-				fprintf(stderr, "tmin = %4d/%02d/%02d,%02d:%02d:%02.0f (%d:%.0f)\n", 
-					tmin.y, tmin.m, tmin.d, tmin.hh, tmin.mm, tmin.sec,
-					gmin.week, gmin.sec);
-				fprintf(stderr, "tmax = %4d/%02d/%02d,%02d:%02d:%02.0f (%d:%.0f)\n", 
-					tmax.y, tmax.m, tmax.d, tmax.hh, tmax.mm, tmax.sec,
-					gmax.week, gmax.sec);
-				exit(1);
-			}
+			// if (subGpsTime(g0, gmin)<0.0 || subGpsTime(gmax, g0)<0.0)
+			// {
+			// 	fprintf(stderr, "ERROR: Invalid start time.\n");
+			// 	fprintf(stderr, "tmin = %4d/%02d/%02d,%02d:%02d:%02.0f (%d:%.0f)\n", 
+			// 		tmin.y, tmin.m, tmin.d, tmin.hh, tmin.mm, tmin.sec,
+			// 		gmin.week, gmin.sec);
+			// 	fprintf(stderr, "tmax = %4d/%02d/%02d,%02d:%02d:%02.0f (%d:%.0f)\n", 
+			// 		tmax.y, tmax.m, tmax.d, tmax.hh, tmax.mm, tmax.sec,
+			// 		gmax.week, gmax.sec);
+			// 	exit(1);
+			// }
 		}
 	}
 	else
@@ -2345,32 +2358,33 @@ int main(int argc, char *argv[])
 	fprintf(stderr, "Duration = %.1f [sec]\n", ((double)numd)/10.0);
 
 	// Select the current set of ephemerides
-	ieph = -1;
+	// ieph = -1;
+	ieph = 0;
 
-	for (i=0; i<neph; i++)
-	{
-		for (sv=0; sv<MAX_SAT; sv++)
-		{
-			if (eph[i][sv].vflg == 1)
-			{
-				dt = subGpsTime(g0, eph[i][sv].toc);
-				if (dt>=-SECONDS_IN_HOUR && dt<SECONDS_IN_HOUR)
-				{
-					ieph = i;
-					break;
-				}
-			}
-		}
+	// for (i=0; i<neph; i++)
+	// {
+	// 	for (sv=0; sv<MAX_SAT; sv++)
+	// 	{
+	// 		if (eph[i][sv].vflg == 1)
+	// 		{
+	// 			dt = subGpsTime(g0, eph[i][sv].toc);
+	// 			if (dt>=-SECONDS_IN_HOUR && dt<SECONDS_IN_HOUR)
+	// 			{
+	// 				ieph = i;
+	// 				break;
+	// 			}
+	// 		}
+	// 	}
 
-		if (ieph>=0) // ieph has been set
-			break;
-	}
+	// 	if (ieph>=0) // ieph has been set
+	// 		break;
+	// }
 
-	if (ieph == -1)
-	{
-		fprintf(stderr, "ERROR: No current set of ephemerides has been found.\n");
-		exit(1);
-	}
+	// if (ieph == -1)
+	// {
+	// 	fprintf(stderr, "ERROR: No current set of ephemerides has been found.\n");
+	// 	exit(1);
+	// }
 
 	////////////////////////////////////////////////////////////
 	// Baseband signal buffer and output file
