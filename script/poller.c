@@ -44,6 +44,7 @@ int main( int argc, char **argv ) {
   pid_t tmp = 0;
 
   /* keep watching forever until keyboard interrupt */
+  int eofix = 0; 
   while(1) {
     int length, i = 0;
     length = read(fd, buffer, BUF_LEN);
@@ -55,19 +56,26 @@ int main( int argc, char **argv ) {
       struct inotify_event *event = ( struct inotify_event * ) &buffer[ i ];
       if( event-> len) {
         if(event->mask & IN_CREATE) {
-            printf("The file %s was created.\n",event->name);
+            // printf("The file %s was created.\n",event->name);
           }
         else if(event->mask & IN_DELETE) {
-            printf("The file %s was deleted.\n",event->name);
+            // printf("The file %s was deleted.\n",event->name);
           }
         else if(event->mask & IN_MODIFY) {
-
+                
             if(strcmp(event->name,"gps_ephemeris.xml") == 0) {
               /* 
                * This should trigger xml -> rinex convertor
                */
               /* wait for 2 sec for file to appear completely */
-              sleep(5);
+              if(eofix == 0) {
+                  eofix = 1;
+                  break;
+              } else {
+                  eofix = 0;
+              }
+
+              sleep(2);
               if (tmp)
                 kill(tmp, SIGKILL);
               printf("Calling xml to rinex convertor...\n");
@@ -82,26 +90,6 @@ int main( int argc, char **argv ) {
                */
                   static char *argv[]={"/home/gnss-pc1/bin/worker",NULL};
                   execv("/home/gnss-pc1/bin/worker",argv);
-              /* simc ( xml, location,frequency sample ) */
-              /*
-                  static char *argv[]={"gps-sdr-sim",
-                          "-e","/home/gnss-pc1/tmp/gps_ephemeris.xml",
-                          "-l","30.286502,120.032669,100",
-                          "-o","/home/gnss-pc1/tmp/gpssim.bin",
-                          "-d","100","-s","4e6",NULL};
-                  execv("/home/gnss-pc1/bin/gps-sdr-sim",argv);
-              */
-              /* needs more testing */
-              /* run uhd_broadcast after the simulation
-                  static char *argv2[]={"tx_samples_from_file",
-                          "--args=\"master_clock_rate=50e6\"",
-                          "--file","/home/tmp/gpssim.bin",
-                          "--type","short","--rate","4000000",
-                          "--freq","1575420000","--gain","30",
-                          "--repeat",NULL};
-                  execv("/home/gnss-pc1/uhd/host/build/examples/tx_samples_from_file"
-                        ,argv2);
-                */
                 
                   exit(127);
               /* watcher rerun... */
@@ -119,7 +107,7 @@ int main( int argc, char **argv ) {
               }
               
             }
-            /* printf("The file %s was modified.\n",event->name); */
+            // printf("The file %s was modified.\n",event->name); 
           }
         }
       i += EVENT_SIZE + event->len;
