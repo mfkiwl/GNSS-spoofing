@@ -3,15 +3,18 @@
 #---------------------------------------------------------------------
 # Control Parameters
 GPS_SDR_BIN=$HOME/bin/gps-sdr-sim
-TX_SAMPLES_FROM_FILE=$HOME/prefix4.0/lib/uhd/examples/tx_samples_from_file
+PY_UHD_TRANSMITTER=$HOME/gps-sdr-sim/gps-sdr-sim-uhd.py
+UHD_TRANSMITTER=$HOME/prefix4.0/lib/uhd/examples/tx_samples_from_file
 EPHEMERIS_FILE=$HOME/tmp/gps_ephemeris.xml
-GPSSIM_BIN_CREATE=$HOME/tmp/gpssim.bin
-GPSSIM_BIN_BROADCAST=$HOME/tmp/gpssim.bin
-GPS_SDR_SIM_UHD=$HOME/gps-sdr-sim/gps-sdr-sim-uhd.py
-freq=4000000
+GPSSIM_BIN_CREATE=$HOME/tmp/gpsspoofing.bin
+#GPSSIM_BIN_BROADCAST=$HOME/tmp/gpsspoofing.bin
+GPSSIM_BIN_BROADCAST=$HOME/gps-sdr-sim/gpssim.bin
+freq=2500000
 sim_duration=100
-addr=192.168.13.5
+broadcast_addr=192.168.13.5
+broadcast_program=1                             # TYPE = 0 or 1
 gain=0
+date=$(date '+%Y/%m/%d,%H:%M:%S')
 
 #---------------------------------------------------------------------
 # Sequence Worker Actions
@@ -19,15 +22,49 @@ pushd $HOME/prefix4.0/
 . setup_env.sh
 popd
 
+#---------------------------------------------------------------------
+# ERROR Checking
+# Make a bash function here to clean up things 
+if [[ -f $GPS_SDR_SIM ]]
+then
+    echo "[ERROR]: NO gps-sdr-sim file found !"
+    exit 127
+fi
+#if [[ -f $PY_UHD_TRANSMITTER ]]
+#then
+#    echo "[ERROR]: NO gps-sdr-sim-uhd.py file found !"
+#    exit 127
+#fi
+#if [[ -f $UHD_TRANSMITTER ]]
+#then
+#    echo "[ERROR]: NO tx_samples_from_file file found !"
+#    exit 127
+#fi
+
+if [[ $GPS_BIN_CREATE -ne $GPS_BIN_BROADCAST ]]
+then
+    echo "[WARNING]: You are not broadcasting the created binary file!"
+fi
+
+
 #----------------------- BINARY GENERATION ---------------------------
-$GPS_SDR_BIN -e $EPHEMERIS_FILE -d $sim_duration \
-        -l "30.286,120.141,100" -o $GPSSIM_BIN_CREATE -s $freq
+#$GPS_SDR_BIN -e $EPHEMERIS_FILE -d $sim_duration -t $date \
+#        -l "30.286,120.141,100" -o $GPSSIM_BIN_CREATE -s $freq
 
 #--------------------------- TRANSMITTER -----------------------------
-# $TX_SAMPLES_FROM_FILE --args="type=usrp2,addr=$freq" \
-#        --file $GPSSIM_BIN_BROADCAST --type short --rate 2600000 \
-#        --freq 1575420000 --gain 30 --repeat NULL
-python3 $GPS_SDR_SIM_UHD -t $GPSSIM_BIN_BROADCAST -s $freq -x $gain \
-        --args=type="usrp2,addr=$addr"
+if [[ $broadcast_program -eq 0 ]]
+then
+$UHD_TRANSMITTER --args="type=usrp2,addr=$broadcast_addr" \
+        --file $GPSSIM_BIN_BROADCAST --type short --rate $freq \
+        --freq 1575420000 --gain $gain --repeat NULL
+
+elif [[ $broadcast_program -eq 1 ]]
+then
+python3 $PY_UHD_TRANSMITTER -t $GPSSIM_BIN_BROADCAST -s $freq -x $gain \
+        --args=type="usrp2,addr=$broadcast_addr"
+else
+    echo "Invalid Transmitter Program Selected !"
+fi
 #---------------------------------------------------------------------
+exit 0
 # EOF 
