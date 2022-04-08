@@ -1,14 +1,19 @@
 #!/bin/bash
-
-#---------------------------------------------------------------------
+# --------------------------------------------------------------------
+# @file    worker.sh
+# @brief   run gps-sdr-sim and uhd-transmitter
+# @author  smk (sudhanshumohan781@gmail.com)
+# @version 20220409
+# @license BSD3
+# @bugs    No know bugs
+# --------------------------------------------------------------------
 # Control Parameters
 GPS_SDR_BIN=$HOME/bin/gps-sdr-sim
 PY_UHD_TRANSMITTER=$HOME/gps-sdr-sim/gps-sdr-sim-uhd.py
 UHD_TRANSMITTER=$HOME/prefix4.0/lib/uhd/examples/tx_samples_from_file
 EPHEMERIS_FILE=$HOME/tmp/gps_ephemeris.xml
 GPSSIM_BIN_CREATE=$HOME/tmp/gpsspoofing.bin
-#GPSSIM_BIN_BROADCAST=$HOME/tmp/gpsspoofing.bin
-GPSSIM_BIN_BROADCAST=$HOME/gps-sdr-sim/gpssim.bin
+GPSSIM_BIN_BROADCAST=$HOME/tmp/gpsspoofing.bin
 freq=2500000
 sim_duration=100
 broadcast_addr=192.168.13.5
@@ -17,53 +22,50 @@ gain=0
 date=$(date '+%Y/%m/%d,%H:%M:%S')
 
 #---------------------------------------------------------------------
-# Sequence Worker Actions
+# SETUP Environment Variables
 pushd $HOME/prefix4.0/
 . setup_env.sh
 popd
 
 #---------------------------------------------------------------------
 # ERROR Checking
-# Make a bash function here to clean up things 
-if [[ -f $GPS_SDR_SIM ]]
-then
-    echo "[ERROR]: NO gps-sdr-sim file found !"
-    exit 127
+# check if $GPS_SDR_SIM exits
+if [ ! -f $GPS_SDR_BIN ]; then
+    echo "ERROR: $GPS_SDR_BIN does not exist"
+    exit 1
 fi
-#if [[ -f $PY_UHD_TRANSMITTER ]]
-#then
-#    echo "[ERROR]: NO gps-sdr-sim-uhd.py file found !"
-#    exit 127
-#fi
-#if [[ -f $UHD_TRANSMITTER ]]
-#then
-#    echo "[ERROR]: NO tx_samples_from_file file found !"
-#    exit 127
-#fi
-
-if [[ $GPS_BIN_CREATE -ne $GPS_BIN_BROADCAST ]]
-then
-    echo "[WARNING]: You are not broadcasting the created binary file!"
+# check if $PY_UHD_TRANSMITTER exits
+if [ ! -f $PY_UHD_TRANSMITTER ]; then
+    echo "ERROR: $PY_UHD_TRANSMITTER does not exist"
+    exit 1
 fi
-
-
+# check if $UHD_TRANSMITTER exits
+if [ ! -f $UHD_TRANSMITTER ]; then
+    echo "ERROR: $UHD_TRANSMITTER does not exist"
+    exit 1
+fi
+# check if $GPS_BIN_CREATE is same as $GPS_BIN_BROADCAST
+if [ $GPSSIM_BIN_CREATE != $GPSSIM_BIN_BROADCAST ]; then
+    echo "[WARNING]: Created Bin File is not same as Broadcast Bin File"
+fi
 #----------------------- BINARY GENERATION ---------------------------
-#$GPS_SDR_BIN -e $EPHEMERIS_FILE -d $sim_duration -t $date \
-#        -l "30.286,120.141,100" -o $GPSSIM_BIN_CREATE -s $freq
+$GPS_SDR_BIN -e $EPHEMERIS_FILE -d $sim_duration -t $date \
+        -l "30.286,120.141,100" -o $GPSSIM_BIN_CREATE -s $freq
 
 #--------------------------- TRANSMITTER -----------------------------
-if [[ $broadcast_program -eq 0 ]]
-then
-$UHD_TRANSMITTER --args="type=usrp2,addr=$broadcast_addr" \
+# if broadcast program is 0, then run uhd-transmitter
+if [ $broadcast_program -eq 0 ]; then
+    $UHD_TRANSMITTER --args="type=usrp2,addr=$broadcast_addr" \
         --file $GPSSIM_BIN_BROADCAST --type short --rate $freq \
         --freq 1575420000 --gain $gain --repeat NULL
 
-elif [[ $broadcast_program -eq 1 ]]
-then
-python3 $PY_UHD_TRANSMITTER -t $GPSSIM_BIN_BROADCAST -s $freq -x $gain \
+elif [ $broadcast_program -eq 1 ]; then
+# if broadcast program is 1, then run gps-sdr-sim
+    python3 $PY_UHD_TRANSMITTER -t $GPSSIM_BIN_BROADCAST -s $freq -x $gain \
         --args=type="usrp2,addr=$broadcast_addr"
 else
-    echo "Invalid Transmitter Program Selected !"
+    echo "[ERROR]: Invalid Transmitter Program Selected !"
+    exit 1
 fi
 #---------------------------------------------------------------------
 exit 0

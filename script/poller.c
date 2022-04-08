@@ -1,9 +1,12 @@
 /*
 * --------------------------------------------------------------------
-* @file    poller
-* @brief   Sample design for GNSS-SDR-SIM Polling Utility
-* @author  smk (smk@it.ca)
-* @version 0.1.20220319
+* @file    poller.c
+* @brief   GNSS-SDR epheremis polling module, it is used to poll the 
+           updates made to ephemeris.xml file and trigger the worker 
+           script to launch gps-sdr-sim and broadcast the generated 
+           binary file.
+* @author  smk (sudhanshumohan781@gmail.com)
+* @version 0.2.20220409
 * @license BSD3
 * @bugs    No know bugs
 * --------------------------------------------------------------------
@@ -39,12 +42,14 @@ int main( int argc, char **argv ) {
   printf("Starting up Watcher...\n");
   wd = inotify_add_watch( fd, "/home/gnss-pc1/tmp/", IN_MODIFY | IN_CREATE | IN_DELETE);
 
+/*
   int cnt = 0, maxCnt = 100;
   printf("Event will be watched for %d updates.\n",maxCnt);
+*/
   pid_t tmp = 0;
+  int eofix = 0; 
 
   /* keep watching forever until keyboard interrupt */
-  int eofix = 0; 
   while(1) {
     int length, i = 0;
     length = read(fd, buffer, BUF_LEN);
@@ -54,7 +59,7 @@ int main( int argc, char **argv ) {
 
     while (i < length) {
       struct inotify_event *event = ( struct inotify_event * ) &buffer[ i ];
-      if( event-> len) {
+      if(event-> len) {
         if(event->mask & IN_CREATE) {
             // printf("The file %s was created.\n",event->name);
           }
@@ -64,21 +69,21 @@ int main( int argc, char **argv ) {
         else if(event->mask & IN_MODIFY) {
                 
             if(strcmp(event->name,"gps_ephemeris.xml") == 0) {
-              /* 
-               * This should trigger xml -> rinex convertor
-               */
-              /* wait for 2 sec for file to appear completely */
+              // Little fix to
+               choose second modification event
               if(eofix == 0) {
                   eofix = 1;
                   break;
               } else {
                   eofix = 0;
               }
-
+              /* wait for 2 sec for file to
+               appear completely */
               sleep(2);
               if (tmp)
                 kill(tmp, SIGKILL);
-              printf("Calling xml to rinex convertor...\n");
+              printf("Calling xml to
+               rinex convertor...\n");
               /* fork a child process */ 
               pid_t pid=fork();
               tmp = pid;
@@ -92,20 +97,18 @@ int main( int argc, char **argv ) {
                   execv("/home/gnss-pc1/bin/worker",argv);
                 
                   exit(127);
-              /* watcher rerun... */
               } else {
-                  /*
-                   * After detection of gps_ephemeris.xml convertor is
-                   * triggered. Script should ideally give some time to
-                   * gps-sdr-sim to process xml before starting watcher
-                   * again.
-                   */
+              /*
+               * After detection of gps_ephemeris.xml convertor is
+               * triggered. Script should ideally give some time to
+               * gps-sdr-sim to process xml before starting watcher
+               * again.
+               */
                   int sleep_time = 10;
                   printf("Starting Sleep for %d seconds.\n",sleep_time);
                   sleep(sleep_time);
                   printf("Waking up.\n");
               }
-              
             }
             // printf("The file %s was modified.\n",event->name); 
           }
@@ -125,6 +128,5 @@ int main( int argc, char **argv ) {
   exit ( 0 );
 
 }
-
 /* ---------------------------------------------------------------- */
 /* EOF */
